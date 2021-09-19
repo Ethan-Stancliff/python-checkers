@@ -56,9 +56,21 @@ class Board:
     def pushMove(self, move):
         """
         Pushes a given move to the stack if the move is valid
-        :param move: tuple
-        :return:
+        :param move: tuple(startingPiecePosition, newPiecePosition, [listOfJumpedPieces])
         """
+
+        # TODO: Validate move
+        # The stack sequentially stores moves made to the board, format:
+        # [tuple(startingPiecePosition, newPiecePosition, {deletedPiecePos: deletedPieceValues})]
+        self._stack.append((
+            move[0],
+            move[1],
+            dict(zip(move[2], [self._board[i] for i in move[2]]))
+        ))
+
+        self._movePiece(move)
+        self._whiteTurn = not self._whiteTurn
+        self._legalMoves = self._calcLegalMoves()
 
     def _movePiece(self, move):
         """
@@ -86,7 +98,7 @@ class Board:
         :param pos: The position of the piece
         :return: Dictionary containing possible moves and the pieces that would be jumped as a result
         """
-        if self._board[pos] == 1 or self._board[pos] == 2:
+        if self._board[pos] == 1 or self._board[pos] == -1:
             return self._scanMoves(pos, self._board[pos])
 
     def _scanMoves(self, startingPos, pieceJumping, jumped=[]):
@@ -108,7 +120,7 @@ class Board:
         for direction in upDirections:
             newPos = Board.movePiece(startingPos, direction)
             if newPos is None:
-                break
+                continue
 
             # The piece on the square we're moving into
             movePiece = self._board[newPos]
@@ -118,13 +130,14 @@ class Board:
                 # The position we would be at if we jumped over the adjacent piece
                 jumpedPos = Board.movePiece(startingPos, direction, 2)
                 if jumpedPos is None:
-                    break
-                if not (jumpedPos is None) and self._board[jumpedPos] == 0:
+                    continue
+                if self._board[jumpedPos] == 0:
+                    toReturn.update({newPos: jumped+[newPos]})
                     toReturn.update(self._scanMoves(jumpedPos, pieceJumping, jumped+[newPos]))
         for direction in downDirections:
             newPos = Board.movePiece(startingPos, direction)
             if newPos is None:
-                break
+                continue
 
             # The piece on the square we're moving into
 
@@ -135,8 +148,9 @@ class Board:
                 # The position we would be at if we jumped over the adjacent piece
                 jumpedPos = Board.movePiece(startingPos, direction, 2)
                 if jumpedPos is None:
-                    break
+                    continue
                 if not (jumpedPos is None) and self._board[jumpedPos] == 0:
+                    toReturn.update({newPos: jumped+[newPos]})
                     toReturn.update(self._scanMoves(jumpedPos, pieceJumping, jumped+[newPos]))
 
         return toReturn
