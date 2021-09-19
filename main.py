@@ -9,7 +9,10 @@ def validateMoves(val):
 
 
 b = Board()
-b.pushMove((30, 25, []))
-b.pushMove((16, 20, []))
+print(b)
+b.push((30, 25, []))
+print(b)
+print(b.getLegalMoves())
+b.push((16, 20, []))
 print(b)
 print(b.getLegalMoves())

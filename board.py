@@ -53,7 +53,7 @@ class Board:
     def getLegalMoves(self):
         return self._legalMoves
 
-    def pushMove(self, move):
+    def push(self, move):
         """
         Pushes a given move to the stack if the move is valid
         :param move: tuple(startingPiecePosition, newPiecePosition, [listOfJumpedPieces])
@@ -72,6 +72,15 @@ class Board:
         self._whiteTurn = not self._whiteTurn
         self._legalMoves = self._calcLegalMoves()
 
+    def pop(self):
+        """Unmakes the most recent move made"""
+        lastMove = self._stack[-1]
+        if not lastMove:
+            return
+        self._unmakeMove(lastMove)
+        self._whiteTurn = not self._whiteTurn
+        self._legalMoves = self._calcLegalMoves()
+
     def _movePiece(self, move):
         """
         :param move: tuple(startingPiecePosition, newPiecePosition, [listOfJumpedPieces])
@@ -81,6 +90,15 @@ class Board:
         for pos in move[2]:
             self._board[pos] = 0
 
+    def _unmakeMove(self, move):
+        """Takes a move and unmakes it
+        :param move: tuple(startingPiecePosition, newPiecePosition, {deletedPiecePos: deletedPieceValue})
+        """
+        self._board[move[0]] = self._board[move[1]]
+        self._board[move[1]] = 0
+        for pos in move[2]:
+            self._board[pos] = move[2][pos]
+
     # TODO: Add movement forcing
     def _calcLegalMoves(self):
         legalMoves = {}
@@ -89,6 +107,21 @@ class Board:
                 legalMoves.update({pos: self._getPieceMoves(pos)} if self._getPieceMoves(pos) else {})
             elif not self._whiteTurn and self._board[pos] < 0:
                 legalMoves.update({pos: self._getPieceMoves(pos)} if self._getPieceMoves(pos) else {})
+
+        # Checks to see if there are any jumps possible, if so, forces them
+        longestPossibleJump = 0
+        for piece in legalMoves:
+            for move in legalMoves[piece]:
+                if len(legalMoves[piece][move]) > longestPossibleJump:
+                    longestPossibleJump = len(legalMoves[piece][move])
+
+        if longestPossibleJump > 0:
+            for piece in legalMoves.copy():
+                for move in legalMoves[piece].copy():
+                    if len(legalMoves[piece][move]) < longestPossibleJump:
+                        legalMoves[piece].pop(move)
+                if len(legalMoves[piece]) == 0:
+                    legalMoves.pop(piece)
         return legalMoves
 
     def _getPieceMoves(self, pos):
