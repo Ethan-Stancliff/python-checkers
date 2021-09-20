@@ -4,6 +4,7 @@ class Board:
     Default is the international version
     Pieces are represented in a list with 25 options
     """
+
     @staticmethod
     def movePiece(pos, direction, count=1):
         """
@@ -40,12 +41,15 @@ class Board:
             newPos = (pos + 5) - ((pos // 5) % 2)
         else:
             newPos = (pos + 6) - ((pos // 5) % 2)
-        return newPos if count == 1 else Board.movePiece(newPos, direction, count-1)
+        return newPos if count == 1 else Board.movePiece(newPos, direction, count - 1)
 
-    def __init__(self):
-        self._board = [-1] * 20
-        self._board.extend([0] * 10)
-        self._board.extend([1] * 20)
+    def __init__(self, board=[]):
+        if not board:
+            self._board = [-1] * 20
+            self._board.extend([0] * 10)
+            self._board.extend([1] * 20)
+        else:
+            self._board = board
         self._stack = []
         self._whiteTurn = True
         self._legalMoves = self._calcLegalMoves()
@@ -133,6 +137,8 @@ class Board:
         """
         if self._board[pos] == 1 or self._board[pos] == -1:
             return self._scanMoves(pos, self._board[pos])
+        elif self._board[pos] == 2 or self._board[pos] == -2:
+            return self._scanPromotedMoves(pos, self._board[pos])
 
     def _scanMoves(self, startingPos, pieceJumping, jumped=[]):
         """
@@ -165,8 +171,8 @@ class Board:
                 if jumpedPos is None:
                     continue
                 if self._board[jumpedPos] == 0:
-                    toReturn.update({newPos: jumped+[newPos]})
-                    toReturn.update(self._scanMoves(jumpedPos, pieceJumping, jumped+[newPos]))
+                    toReturn.update({jumpedPos: jumped + [newPos]})
+                    toReturn.update(self._scanMoves(jumpedPos, pieceJumping, jumped + [newPos]))
         for direction in downDirections:
             newPos = Board.movePiece(startingPos, direction)
             if newPos is None:
@@ -183,8 +189,41 @@ class Board:
                 if jumpedPos is None:
                     continue
                 if not (jumpedPos is None) and self._board[jumpedPos] == 0:
-                    toReturn.update({newPos: jumped+[newPos]})
-                    toReturn.update(self._scanMoves(jumpedPos, pieceJumping, jumped+[newPos]))
+                    toReturn.update({jumpedPos: jumped + [newPos]})
+                    toReturn.update(self._scanMoves(jumpedPos, pieceJumping, jumped + [newPos]))
+
+        return toReturn
+
+    def _scanPromotedMoves(self, startingPos, pieceJumping, jumped=[]):
+        directions = ["UL", "UR", "LL", "LR"]
+        toReturn = {}
+
+        for direction in directions:
+            foundEnemy = None
+            beforeJumped = {}
+            afterJumped = {}
+            newPos = Board.movePiece(startingPos, direction)
+
+            while newPos is not None:
+                newPiece = self._board[newPos]
+                if newPiece == 0:
+                    if not foundEnemy and not jumped:
+                        beforeJumped.update({newPos: []})
+                    if foundEnemy and newPos not in jumped:
+                        afterJumped.update({newPos: [foundEnemy]})
+                        afterJumped.update(self._scanPromotedMoves(newPos, pieceJumping, [foundEnemy] + jumped))
+                elif (newPiece >= 1) == (pieceJumping >= 1):
+                    break
+                else:
+                    if not foundEnemy and newPos not in jumped:
+                        foundEnemy = newPos
+                    else:
+                        break
+                newPos = Board.movePiece(newPos, direction)
+            if foundEnemy and afterJumped:
+                toReturn.update(afterJumped)
+            elif beforeJumped:
+                toReturn.update(beforeJumped)
 
         return toReturn
 
