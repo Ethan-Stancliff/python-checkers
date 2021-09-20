@@ -1,4 +1,5 @@
 from board import Board
+from graphics import Graphics
 
 
 def validateMoves(val):
@@ -9,10 +10,8 @@ def validateMoves(val):
 
 
 b = Board()
-print(b)
 b.push((30, 25, []))
+
+g = Graphics(b)
+g.run()
 print(b)
-print(b.getLegalMoves())
-b.push((16, 20, []))
-print(b)
-print(b.getLegalMoves())

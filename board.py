@@ -57,6 +57,9 @@ class Board:
     def getLegalMoves(self):
         return self._legalMoves
 
+    def getBoard(self):
+        return self._board
+
     def push(self, move):
         """
         Pushes a given move to the stack if the move is valid
