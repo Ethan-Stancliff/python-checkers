@@ -168,12 +168,12 @@ class Board:
             movePiece = self._board[newPos]
             if movePiece == 0 and not jumped and pieceJumping == 1:
                 toReturn.update({newPos: []})
-            if movePiece != 0 and movePiece != pieceJumping and not (movePiece in jumped):
+            if movePiece != 0 and movePiece != pieceJumping and not (newPos in jumped):
                 # The position we would be at if we jumped over the adjacent piece
                 jumpedPos = Board.movePiece(startingPos, direction, 2)
                 if jumpedPos is None:
                     continue
-                if self._board[jumpedPos] == 0:
+                if not (jumpedPos is None) and self._board[jumpedPos] == 0:
                     toReturn.update({jumpedPos: jumped + [newPos]})
                     toReturn.update(self._scanMoves(jumpedPos, pieceJumping, jumped + [newPos]))
         for direction in downDirections:
@@ -182,11 +182,10 @@ class Board:
                 continue
 
             # The piece on the square we're moving into
-
             movePiece = self._board[newPos]
             if movePiece == 0 and not jumped and pieceJumping == -1:
                 toReturn.update({newPos: []})
-            if movePiece != 0 and movePiece != pieceJumping and not (movePiece in jumped):
+            if movePiece != 0 and movePiece != pieceJumping and not (newPos in jumped):
                 # The position we would be at if we jumped over the adjacent piece
                 jumpedPos = Board.movePiece(startingPos, direction, 2)
                 if jumpedPos is None:

@@ -10,7 +10,7 @@ def validateMoves(val):
 
 
 b = Board()
-b.push((30, 25, []))
+print(b.getLegalMoves())
 
 g = Graphics(b)
 g.run()
